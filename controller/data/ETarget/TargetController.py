@@ -18,29 +18,14 @@ class TargetController:
         self.input_data_dir =  pathlib.Path(self.input_path)
 
         self.targetDir = pathlib.Path(self.input_path+"\\TARGET")
-        return
-    
-    def checkTargetFiles(self):
-        data_count_Target_xls = len(list(self.targetDir.glob('*.xlsx')))
-        if data_count_Target_xls <= 0:
-            return False
-        return True
-    
-    def extract_data(self, filename):
 
-        sheetname = 0
-        atRows = 2
-        columns= None
-        df = pd.DataFrame()
-        df = lib().extractToDF(df=df, filename=filename, sheetname=sheetname, atRows=atRows, columns=columns)
-        
-        rename_columns = {
+        #config
+        self.rename_columns = {
             "NO ABSEN ": "No.Absen",
             "NAMA  " : "Nama",
             "DEVISI " : "Bagian",
             "Unnamed: 16": "Rata-Rata",
             "Unnamed: 17": "Keterangan",
-            
             
             "Unnamed: 19": "m-1",
             "Unnamed: 20": "m-2",
@@ -70,25 +55,54 @@ class TargetController:
             "DES": "m-12",
         }
 
+        self.dropnaList = ['No.Absen', 'Nama']
+
+        self.dfFill = [
+            {
+                'col': 'Keterangan',
+                'val': '-'
+            }
+        ]
+        self.dfFillOther = "#"
+
+        return
+    
+    def checkTargetFiles(self):
+        data_count_Target_xls = len(list(self.targetDir.glob('*.xlsx')))
+        if data_count_Target_xls <= 0:
+            return False
+        return True
+    
+    def extract_data(self, filename):
+
+        sheetname = 0
+        atRows = 2
+        columns= None
+        df = pd.DataFrame()
+        df = lib().extractToDF(df=df, filename=filename, sheetname=sheetname, atRows=atRows, columns=columns)
+        
+        
         for col in df.columns:
             if isinstance(col, datetime.datetime):
-                rename_columns[col] = str(col.month)
+                self.rename_columns[col] = str(col.month)
         
-        df = df.rename(columns= rename_columns)
+        df = df.rename(columns= self.rename_columns)
         df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
-        df = df.dropna(subset=["No.Absen"], axis=0) 
-        # df = df.dropna(subset=["Bagian"], axis=0)
-        df = df.dropna(subset=["Nama"], axis=0)
 
-        df['Keterangan'] = df['Keterangan'].fillna("-")
-        df = df.fillna("#", axis=1)
+        for key in self.dropnaList:
+            df = df.dropna(subset=[key], axis=0)
+
+        for key in self.dfFill:
+            df[key['col']] = df[key['col']].fillna(key['val'])
+
+        df = df.fillna(self.dfFillOther, axis=1)
 
         # dtypes = {
         #     "No.Absen" : str,
 
         # }
         # df = df.astype(dtypes)
-
+        df = df.reset_index(drop=True)
 
         return df
     

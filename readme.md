@@ -1,6 +1,6 @@
 # Chibi-hr
 
-A cli tool for HR, employee performance in absence and target
+Chibi-HR is an interactive menu-driven CLI application designed to process HR Excel files such as monthly absence reports and employee productivity targets. It summarizes the data into structured outputs to support reporting and decision-making.
 
 ---
 
@@ -43,6 +43,12 @@ source venv/bin/activate
     python main.py
 ```
 
+### On first run
+
+- A default config.json file will be generated.
+- Input/output folders will be created (input/, output/).
+- If config.json is deleted or corrupted, it will be regenerated automatically.
+
 ### Build using pyinstaller
 
 ## For the first build:
@@ -58,6 +64,10 @@ source venv/bin/activate
 ```
 
 ---
+
+## Developer Customization
+
+For details on customizing processing parameters, see [CONTRIBUTING.md](CONTRIBUTING.md#configuration-and-customization).
 
 ## License
 

@@ -49,6 +49,12 @@ class ConfigManager:
                 "absence-risk-threshold-M": {"E": 1, "D": 2},
                 "absence-warn-threshold-M": {"D": 1, "C": 2},
                 "absence-recent-trend-M": 3,
+                "absence-X-M": 4,
+
+                "absence-perfect-con-A": "A",
+                "absence-dismiss-threshold-A": {"E": 2},
+                "absence-risk-threshold-A": {"E": 1, "D": 2},
+                "absence-warn-threshold-A": {"D": 1, "C": 2},
 
                 # "absence-passing-grade-M": "C",
                 # "absence-passing-grade-Q": "D",
@@ -60,7 +66,12 @@ class ConfigManager:
                 "target-risk-threshold-M": {"E": 1, "D": 2},
                 "target-warn-threshold-M": {"D": 1, "C": 2},
                 "target-recent-trend-M": 3,
+                "target-X-M": 4,
 
+                "target-perfect-con-A": "A",
+                "target-dismiss-threshold-A": {"E": 2},
+                "target-risk-threshold-A": {"E": 1, "D": 2},
+                "target-warn-threshold-A": {"D": 1, "C": 2},
                 # "target-passing-grade-M": "C",
                 # "target-passing-grade-Q": "D",
                 # "target-passing-grade-S": "D",

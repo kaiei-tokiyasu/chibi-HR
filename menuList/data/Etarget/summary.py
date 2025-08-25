@@ -1,4 +1,9 @@
 import pandas as pd
+from controller.data.ETarget.period.annual import TargetAnnual
+from controller.data.ETarget.period.lastXmonth import TargetXMonth
+from controller.data.ETarget.period.monthly import TargetMonthly
+from controller.data.ETarget.period.quarter import TargetQuarter
+from controller.data.ETarget.period.semester import TargetSemester
 from utils.system import SystemController
 from controller.data.ETarget.Target import Target
 from utils.lib import lib
@@ -10,38 +15,43 @@ from controller.climenu import CLImenu
 class TargetSummaryMenu:
     def __init__(self):
         self.title = "Absence Summary Menu"
+        CM = ConfigManager()
+        
+        self.XMonth = CM.config['data']["target-X-M"]
         self.menuList = {
             "1": ("Montly data", self.getSummaryM),
-            "2": ("List Perfect Record", self.getPerfectListM),
-            "3": ("List Good Record", self.getGoodListM),
-            "4": ("List to warn", self.getWarnListM),
-            "5": ("List to call for improvement", self.getCallListM),
-            "6": ("List to dismiss", self.getDismissListM),
-            "7": ("List Improving", self.getImprovingListM),
-            "8": ("List Stable", self.getStableListM),
-            "9": ("List Declining", self.getDecliningListM),
-            "10": ("Quarter data", self.getSummaryQ),
-            "11": ("Semester data", self.getSummaryS),
-            "12": ("Annual data", self.getSummaryA),
-            "13": ("update/sync data", self.updateAll),
+            "2": (f"Show Last {self.XMonth} month", self.getXmonth),
+            "3": ("List Perfect Record", self.getPerfectListM),
+            "4": ("List Good Record", self.getGoodListM),
+            "5": ("List to warn", self.getWarnListM),
+            "6": ("List to call for improvement", self.getCallListM),
+            "7": ("List to dismiss", self.getDismissListM),
+            "8": ("List Improving", self.getImprovingListM),
+            "9": ("List Stable", self.getStableListM),
+            "10": ("List Declining", self.getDecliningListM),
+            "11": ("Quarter data", self.getSummaryQ),
+            "12": ("Semester data", self.getSummaryS),
+            "13": ("Annual data", self.getSummaryA),
+            "14": ("update/sync data", self.updateAll),
         }
         self.raw = None
 
         self.summaryM =None
+        self.summaryXM =None
         self.summaryQ =None
         self.summaryS =None
         self.summaryA =None
 
         self.dfSummary = None
 
-        CM = ConfigManager()
+       
 
         self.perfectCon = CM.config['data']["target-perfect-con-M"]
         self.dismissCon = CM.config['data']["target-dismiss-threshold-M"]
         self.riskCon = CM.config['data']["target-risk-threshold-M"]
         self.warnCon = CM.config['data']["target-warn-threshold-M"]
-
         self.recentWin = CM.config['data']["target-recent-trend-M"]
+
     
     def dummy(self):
         print('not yet')
@@ -52,6 +62,9 @@ class TargetSummaryMenu:
     
     def setSummaryM(self, data):
         self.summaryM = data
+
+    def setSummaryXM(self, data):
+        self.summaryXM = data
 
     def setSummaryQ(self, data):
         self.summaryQ = data
@@ -74,19 +87,23 @@ class TargetSummaryMenu:
 
         data = self.raw
         if type == 'M':
-            summaryM = Target().MonthlySummary(dataframe=data)
+            summaryM = TargetMonthly().GetSummary(dataframe=data)
             self.setSummaryM(summaryM)
             return 
+        elif type == 'XM':
+            summaryM = TargetXMonth().getLastXMonthData(data=self.summaryM)
+            self.setSummaryXM(summaryM)
+            return 
         elif type == 'Q':
-            summaryQ = Target().QuarterSummary(dataframe=data)
+            summaryQ = TargetQuarter().GetSummary(dataframe=data)
             self.setSummaryQ(summaryQ)
             return 
         elif type =='S':
-            summaryS = Target().SemesterSummary(dataframe=data)
+            summaryS = TargetSemester().GetSummary(dataframe=data)
             self.setSummaryS(summaryS)
             return
         elif type == 'A':
-            summaryA = Target().AnnualSummary(dataframe=data)
+            summaryA = TargetAnnual().GetSummary(dataframe=data)
             self.setSummaryA(summaryA)
             return
         return None
@@ -169,7 +186,15 @@ class TargetSummaryMenu:
             libS.show_df_page(self.dfSummary)
 
             return
-    
+    def getXmonth(self):
+        if self.summaryXM is None:
+            if self.summaryM is None:
+                self.setTarget(type='M')
+            self.setTarget(type='XM')
+        
+        libS = lib()
+        libS.show_df_page(self.summaryXM)
+        
     def getPerfectListM(self):
         if self.summaryM is None:
             self.setTarget(type='M')
@@ -233,34 +258,39 @@ class TargetSummaryMenu:
         df_clean = Target().getDecliningList(data=self.summaryM)
         libS = lib()
         libS.show_df_page(df_clean)
-        
+    
+    
     def updateAll(self):
         raw = self.loadRaw()
         if raw is None:
             return
         
-        total_Process = 7
+        total_Process = 8
         SC = SystemController()
         self.setRaw(raw)
         data = self.raw
 
         SC.print_loading_bar(task_name="Processing Monthly",current=1, total=total_Process)
-        summaryM = Target().MonthlySummary(dataframe=data)
+        summaryM = TargetMonthly().GetSummary(dataframe=data)
         self.setSummaryM(summaryM)
 
-        SC.print_loading_bar(task_name="Processing Quarter",current=2, total=total_Process)
-        summaryQ = Target().QuarterSummary(dataframe=data)
+        SC.print_loading_bar(task_name=f"Processing {self.XMonth} Monthly",current=2, total=total_Process)
+        summaryXM = TargetXMonth().getLastXMonthData(data=summaryM)
+        self.setSummaryXM(summaryXM)
+
+        SC.print_loading_bar(task_name="Processing Quarter",current=3, total=total_Process)
+        summaryQ = TargetQuarter().GetSummary(dataframe=data)
         self.setSummaryQ(summaryQ)
 
-        SC.print_loading_bar(task_name="Processing Semester",current=3, total=total_Process)
-        summaryS = Target().SemesterSummary(dataframe=data)        
+        SC.print_loading_bar(task_name="Processing Semester",current=4, total=total_Process)
+        summaryS = TargetSemester().GetSummary(dataframe=data)        
         self.setSummaryS(summaryS)
 
-        SC.print_loading_bar(task_name="Processing Annual",current=4, total=total_Process)
-        summaryA = Target().AnnualSummary(dataframe=data)
+        SC.print_loading_bar(task_name="Processing Annual",current=5, total=total_Process)
+        summaryA = TargetAnnual().GetSummary(dataframe=data)
         self.setSummaryA(summaryA)
 
-        SC.print_loading_bar(task_name="Combining . . .",current=5, total=total_Process)
+        SC.print_loading_bar(task_name="Combining . . .",current=6, total=total_Process)
         finalSummary = pd.merge(
             summaryQ,
             summaryS,
@@ -274,10 +304,10 @@ class TargetSummaryMenu:
             how='outer'
         )
 
-        SC.print_loading_bar(task_name="Finishing",current=6, total=total_Process)
+        SC.print_loading_bar(task_name="Finishing",current=7, total=total_Process)
         self.setDF(finalSummary)
 
-        SC.print_loading_bar(task_name="Completed",current=7, total=total_Process)
+        SC.print_loading_bar(task_name="Completed",current=8, total=total_Process)
 
         print()
         # SystemController.wait_for_keypress()

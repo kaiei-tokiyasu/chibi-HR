@@ -5,7 +5,9 @@ import subprocess
 
 import pandas as pd
 from config import ConfigManager
-from controller.data.EmployeePerformance.EmployeePerformanceController import EmployeePerformanceController  as EPC 
+from controller.data.EmployeePerformance.EmployeePerformanceController import EmployeePerformanceController  as EPC
+from controller.data.metadata.ETarget import metadataTarget
+from controller.data.metadata.absence import metadataAbsence 
 from menuList.data.absence.summary import AbsenceSummaryMenu
 from menuList.data.Etarget.summary import TargetSummaryMenu
 from controller.data.ETarget.TargetController import TargetController
@@ -20,17 +22,22 @@ class EmployeePerformance:
 
         self.EPSummaryM = None
         self.EPSummaryMRaw = None
+        
+        self.EPSummaryXM = None
+        self.EPSummaryXMRaw = None
 
         CM = ConfigManager()
 
         self.cliLinkMode = CM.config['cli-link-mode']
-
+        self.XMonth = CM.config['data']["target-X-M"]
         return
     
-    def SetEPSummary(self, dataM):
+    def SetEPSummaryM(self, dataM):
         self.EPSummaryM = dataM
 
-    
+    def SetEPSummaryXM(self, dataXM):
+        self.EPSummaryXM = dataXM
+
     def ProcessSummaryQuarter(self):
         ASummaryQ = self.AsummaryQ
         TDSummaryQ = self.TsummaryQ
@@ -66,28 +73,29 @@ class EmployeePerformance:
 
             self.EPSummaryMRaw = [
                 AC.raw,
-                AC.summaryM, 
+                AC.summaryM,
                 TD.raw,
                 TD.summaryM,
             ]
 
+            self.EPSummaryXMRaw =[
+                AC.summaryXM,
+                TD.summaryXM,
+            ]
+
             SummaryMonth = EPC.ProcessSummaryMonth(AC.summaryM, TD.summaryM)
-            self.SetEPSummary(dataM=SummaryMonth)
-
-
-    def exportGoodPerformance(self):
-        self.checkSelfData()
-        # SummaryMonth = self.EPSummaryM
-
-        return
+            SummaryXMonth = EPC().ProcessSummaryXMonth(AbsenXData=AC.summaryXM, TargetXData=TD.summaryXM)
+            self.SetEPSummaryM(dataM=SummaryMonth)
+            self.SetEPSummaryXM(dataXM=SummaryXMonth)
     
-    def exportBadPerformance(self):
-        self.checkSelfData()
+    def align_and_merge_metadata(self, scores_df, meta_df):
+        max_len = max(len(scores_df), len(meta_df))
+        scores_df = scores_df.reindex(range(max_len)).reset_index(drop=True)
+        meta_df = meta_df.reindex(range(max_len)).reset_index(drop=True)
+        return pd.concat([scores_df, pd.DataFrame([[''] * (len(scores_df.columns))] * max_len), meta_df], axis=1)
 
-        return
-    
     def exportAllTEMP (self):
-        total_Process = 7
+        total_Process = 9
         SC = SystemController()
 
         SC.print_loading_bar(task_name="Checking Data",current=1, total=total_Process)
@@ -102,39 +110,55 @@ class EmployeePerformance:
         # All_Target = self.Tsummary
 
         SummaryM = self.EPSummaryM
-        
+        SummaryXM = self.EPSummaryXM
+
         AbsenceSummary = self.EPSummaryMRaw[0]
         AbsenceSummaryM = self.EPSummaryMRaw[1]
         TargetSummary = self.EPSummaryMRaw[2]
         TargetSummaryM = self.EPSummaryMRaw[3]
 
-        
         # SummaryQ = self.ProcessSummaryQuarter()
         
         outputAName = "\\Employee_Absence_Performance_Summary.xlsx"
         SummaryOutputPath = self.output_path+outputAName
 
+        absence_df, absence_meta = metadataAbsence().getMetaDataPD()
+        target_df, target_meta= metadataTarget().getMetaDataPD()
+
+        absence_combined = self.align_and_merge_metadata(scores_df=absence_df, meta_df=absence_meta)
+        target_combined = self.align_and_merge_metadata(scores_df=target_df, meta_df=target_meta)
+        metadata_df = pd.concat([absence_combined, target_combined], ignore_index=True)
+
+
         SC.print_loading_bar(task_name="Exporting",current=2, total=total_Process)
 
         with pd.ExcelWriter(SummaryOutputPath) as writer:
             SummaryM.to_excel(writer, sheet_name="Employee Performance", index=True)
+            SummaryXM.to_excel(writer, sheet_name=f"EP last {self.XMonth} months", index=True)
             AbsenceSummary.to_excel(writer, sheet_name="Absence-Raw", index=True)
             AbsenceSummaryM.to_excel(writer, sheet_name="Absence", index=True)
             TargetSummary.to_excel(writer, sheet_name="Target-Raw", index=True)
             TargetSummaryM.to_excel(writer, sheet_name="Target", index=True)
+            metadata_df.to_excel(writer, sheet_name="metadata", index=True)
             
             # SummaryQ.to_excel(writer, sheet_name="Quarter", index=True)
             
-        SC.print_loading_bar(task_name="1/3 Conditional Formatting",current=4, total=total_Process)
-        EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Employee Performance", data=SummaryM, type="combine")
+        SC.print_loading_bar(task_name="1/4 Conditional Formatting",current=4, total=total_Process)
+        EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Employee Performance", data=SummaryM, type="combine m")
+
+        SC.print_loading_bar(task_name="1/4 Conditional Formatting",current=5, total=total_Process)
+        EPC().formatExcelMonth(w=SummaryOutputPath, sheetname=f"EP last {self.XMonth} months", data=SummaryXM, type="combine xm")
         
-        SC.print_loading_bar(task_name="2/3 Conditional Formatting",current=5, total=total_Process)
+        SC.print_loading_bar(task_name="2/4 Conditional Formatting",current=6, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Absence", data=AbsenceSummaryM, type="Absence")
         
-        SC.print_loading_bar(task_name="3/3 Conditional Formatting",current=5, total=total_Process)
+        SC.print_loading_bar(task_name="3/4 Conditional Formatting",current=7, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Target", data=TargetSummaryM, type="Target")
 
-        SC.print_loading_bar(task_name="Formatting",current=7, total=total_Process)
+        SC.print_loading_bar(task_name="4/4 Conditional Formatting",current=8, total=total_Process)
+        EPC().formatMetaData(w=SummaryOutputPath)
+        EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="metadata", data=metadata_df, type="metadata")
+        SC.print_loading_bar(task_name="Formatting",current=9, total=total_Process)
 
         # self.formatExcelQuarter(w=SummaryOutputPath, data=SummaryQ)
         
@@ -152,7 +176,6 @@ class EmployeePerformance:
 
         return
     
-
     def run(self):
         
         TarController = TargetController()
