@@ -18,14 +18,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, linux-self-hosted]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v3
 
       # Extract version parts from the tag and set env vars for the job
       - name: Extract version from tag (linux)
-        if: matrix.os == 'linux-self-hosted'
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           echo "Tag: $GITHUB_REF"
@@ -99,11 +99,11 @@ jobs:
         run: pyinstaller --onefile --version-file=version.txt --name chibi-HR main.py
 
       - name: Inject version info for Linux
-        if: matrix.os == 'linux-self-hosted'
+        if: matrix.os == 'ubuntu-latest'
         run: echo "__version__ = '${{ env.VERSION_MAJOR }}.${{ env.VERSION_MINOR }}.${{ env.VERSION_PATCH }}.${{ env.VERSION_BUILD }}'" > version.py
 
       - name: Build Linux executable
-        if: matrix.os == 'linux-self-hosted'
+        if: matrix.os == 'ubuntu-latest'
         run: pyinstaller --onefile --name chibi-HR main.py
 
       - name: Upload build artifact
@@ -127,7 +127,7 @@ jobs:
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
-          name: chibihr-linux-self-hosted
+          name: chibihr-ubuntu-latest
           path: dist/linux
 
       - name: List downloaded files
