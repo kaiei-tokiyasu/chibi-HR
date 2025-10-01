@@ -12,21 +12,24 @@ class AbsenceStatus:
         self.tr_improve_msg = "improving"
         self.tr_decline_msg = "declining"
         self.tr_stable_msg = "stable"
-        
+
         CM = ConfigManager()
         self.absence_grade_M = CM.config['data']['absence-M']
         self.recentWin = CM.config['data']["absence-recent-trend-M"]
 
         return
-    
+
     def setStatusGrade(self, valid_grades, conditionType):
         grade_counts = {}
         for g in valid_grades:
             grade_counts[g] = grade_counts.get(g, 0) + 1
 
+
+        perfectCon = conditionType['perfectCon']
+
         if not valid_grades:
             status = self.no_data_msg
-        elif valid_grades and all(g in conditionType['perfectCon'] for g in valid_grades):
+        elif valid_grades and all(g == perfectCon for g in valid_grades):
             # print("Perfect condition matched")
             status = self.perfect_msg
         elif all(grade_counts.get(k, 0) >= v for k, v in conditionType['dismissCon'].items()):
@@ -38,7 +41,7 @@ class AbsenceStatus:
         else:
             status = self.good_msg
         return status
-    
+
     def StatusGradeCal(self, grades, gradeThreshold, conditionType):
         valid_grades = []
         for i, g in enumerate(grades):

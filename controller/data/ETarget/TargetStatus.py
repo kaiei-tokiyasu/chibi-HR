@@ -12,20 +12,22 @@ class TargetStatus:
         self.tr_improve_msg = "improving"
         self.tr_decline_msg = "declining"
         self.tr_stable_msg = "stable"
-        
+
         CM = ConfigManager()
         self.absence_grade_M = CM.config['data']['absence-M']
         self.recentWin = CM.config['data']["target-recent-trend-M"]
         return
-    
+
     def setStatusGrade(self, valid_grades, conditionType):
         grade_counts = {}
         for g in valid_grades:
             grade_counts[g] = grade_counts.get(g, 0) + 1
 
+        perfectCon = conditionType['perfectCon']
+
         if not valid_grades:
             status = "no data"
-        elif valid_grades and all(g in conditionType['perfectCon'] for g in valid_grades):
+        elif valid_grades and all(g ==  perfectCon for g in valid_grades):
             status = self.perfect_msg
         elif all(grade_counts.get(k, 0) >= v for k, v in conditionType['dismissCon'].items()):
             status = self.dismiss_msg
@@ -36,7 +38,7 @@ class TargetStatus:
         else:
             status = self.good_msg
         return status
-    
+
     def StatusGradeCal (self, grades, gradeThreshold, conditionType):
         grade_scale = gradeThreshold
         valid_grades = [g for g in grades if isinstance(g, str) and g in grade_scale and g != '#' and g != '-' and g != 'X']
@@ -52,9 +54,8 @@ class TargetStatus:
             recent_trend = "declining"
         else:
             recent_trend = "stable"
-        
+
         return {
             "overall_status_T": overall_status,
             "recent_trend_T": recent_trend
         }
-    

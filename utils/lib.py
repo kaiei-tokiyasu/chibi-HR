@@ -7,11 +7,11 @@ from config import ConfigManager
 class lib:
     def __init__(self):
         return
-    
+
     def extractToDF(self, df, filename, sheetname, atRows, columns=None):
         df = pd.read_excel(filename, sheet_name=sheetname, skiprows=atRows, usecols=columns)
         return df
-    
+
     def show_df_page(self, df):
         if df is None:
             return
@@ -19,7 +19,7 @@ class lib:
         if total_rows <= 0:
             print("no data available.")
             return
-        
+
         page_size = ConfigManager().get("settings", "default_page_size")
         total_pages = math.ceil(total_rows/page_size)
 

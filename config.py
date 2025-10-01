@@ -29,8 +29,9 @@ class ConfigManager:
 
     def default_config(self):
         current_path = os.getcwd()
-        input_path = current_path+"\\DATASET\\INPUT"
-        output_path = current_path+"\\DATASET\\OUTPUT"
+
+        input_path = os.path.join(current_path, "DATASET", "INPUT")
+        output_path = os.path.join(current_path, "DATASET", "OUTPUT")
 
         cliLinkMode = self.get_path_type()
         configs = {
@@ -137,11 +138,11 @@ class ConfigManager:
                     "E": 1,
                     "F" : 0
                 }
-                
+
             }
         }
         return configs
-    
+
     def printConfig(self):
         print("\n🔧Current Configuration:")
         print("📁 Paths:")
@@ -150,11 +151,11 @@ class ConfigManager:
 
         print("\n Settings:")
         for key, val in self.config.get("settings", {}).items():
-            print(f"  - {key}: {val}")  
+            print(f"  - {key}: {val}")
 
         print("\n data:")
         for key, val in self.config.get("data", {}).items():
-            print(f"  - {key}: {val}")  
+            print(f"  - {key}: {val}")
 
 
     def initConfig(self):
@@ -168,16 +169,16 @@ class ConfigManager:
                 return json.load(f)
         else:
             return self.default_config()
-    
+
     def save_config(self):
         with open(self.path, "w") as f:
             json.dump(self.config, f, indent=4)
-            
+
         print(f"\n✅ Config saved to '{self.path}'")
 
     def get(self, section, key, default=None):
         return self.config.get(section, {}).get(key, default)
-    
+
     def set(self, section, key, value):
         if section not in self.config:
             self.config[section] = {}
