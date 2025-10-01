@@ -29,11 +29,11 @@ class TargetStatus:
             status = "no data"
         elif valid_grades and all(g ==  perfectCon for g in valid_grades):
             status = self.perfect_msg
-        elif all(grade_counts.get(k, 0) >= v for k, v in conditionType['dismissCon'].items()):
+        elif any(grade_counts.get(k, 0) >= v for k, v in conditionType['dismissCon'].items()):
             status = self.dismiss_msg
-        elif all(grade_counts.get(k, 0) >= v for k, v in conditionType['riskCon'].items()):
+        elif any(grade_counts.get(k, 0) >= v for k, v in conditionType['riskCon'].items()):
             status = self.risk_msg
-        elif all(grade_counts.get(k, 0) >= v for k, v in conditionType['warnCon'].items()):
+        elif any(grade_counts.get(k, 0) >= v for k, v in conditionType['warnCon'].items()):
             status = self.improve_msg
         else:
             status = self.good_msg
