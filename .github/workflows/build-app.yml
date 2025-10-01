@@ -12,6 +12,7 @@ env:
   PRODUCT_NAME: "Chibi HR"
   INTERNAL_NAME: "chibihr"
   ORIGINAL_FILENAME: "chibi-HR"
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -137,8 +138,6 @@ jobs:
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
