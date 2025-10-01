@@ -54,7 +54,7 @@ source venv/bin/activate
 ## For the first build:
 
 ```
-    pyinstaller --onefile --version-file=version.txt --name chibi-HR main.py
+    pyinstaller --onefile --name chibi-HR main.py
 ```
 
 ## for subsequent builds:

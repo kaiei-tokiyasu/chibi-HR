@@ -66,7 +66,7 @@ jobs:
         run: |
           echo "Generating version.txt"
           echo "VSVersionInfo(" > version.txt
-          echo "  ffi=FixedFileInfo(" >> version.txt
+          echo "  FixedFileInfo(" >> version.txt
           echo "    filevers=(${{ env.VERSION_MAJOR }}, ${{ env.VERSION_MINOR }}, ${{ env.VERSION_PATCH }}, ${{ env.VERSION_BUILD }})," >> version.txt
           echo "    prodvers=(${{ env.VERSION_MAJOR }}, ${{ env.VERSION_MINOR }}, ${{ env.VERSION_PATCH }}, ${{ env.VERSION_BUILD }})," >> version.txt
           echo "    mask=0x3f," >> version.txt
@@ -76,7 +76,7 @@ jobs:
           echo "    subtype=0x0," >> version.txt
           echo "    date=(0, 0)" >> version.txt
           echo "  )," >> version.txt
-          echo "  kids=[" >> version.txt
+          echo "  [" >> version.txt
           echo "    StringFileInfo([" >> version.txt
           echo "      StringTable('040904B0', [" >> version.txt
           echo "        StringStruct('CompanyName', '${{ env.COMPANY }}')," >> version.txt
@@ -89,9 +89,9 @@ jobs:
           echo "        StringStruct('ProductVersion', '${{ env.VERSION_MAJOR }}.${{ env.VERSION_MINOR }}.${{ env.VERSION_PATCH }}.${{ env.VERSION_BUILD }}')," >> version.txt
           echo "        StringStruct('Comments', 'Author: ${{ env.AUTHOR }}')" >> version.txt
           echo "      ])" >> version.txt
-          echo "    ])" >> version.txt
-          echo "  ]," >> version.txt
-          echo "  VarFileInfo([VarStruct('Translation', [1033, 1200])])" >> version.txt
+          echo "    ])," >> version.txt
+          echo "    VarFileInfo([VarStruct('Translation', [1033, 1200])])" >> version.txt
+          echo "  ]" >> version.txt
           echo ")" >> version.txt
 
       - name: Build Windows executable
