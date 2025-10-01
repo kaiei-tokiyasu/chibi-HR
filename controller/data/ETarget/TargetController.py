@@ -1,9 +1,11 @@
 from csv import excel
 import pathlib
+from pathlib import Path
 from numpy import dtype
 
 import datetime
-
+import os
+import glob
 import pandas as pd
 from utils.lib import lib
 from utils.system import SystemController
@@ -17,7 +19,7 @@ class TargetController:
         self.output_path = self.paths['output_path']
         self.input_data_dir =  pathlib.Path(self.input_path)
 
-        self.targetDir = pathlib.Path(self.input_path+"\\TARGET")
+        self.targetDir = os.path.join(self.input_path, "TARGET")
 
         #config
         self.rename_columns = {
@@ -26,7 +28,7 @@ class TargetController:
             "DEVISI " : "Bagian",
             "Unnamed: 16": "Rata-Rata",
             "Unnamed: 17": "Keterangan",
-            
+
             "Unnamed: 19": "m-1",
             "Unnamed: 20": "m-2",
             "Unnamed: 21": "m-3",
@@ -66,13 +68,14 @@ class TargetController:
         self.dfFillOther = "#"
 
         return
-    
+
     def checkTargetFiles(self):
-        data_count_Target_xls = len(list(self.targetDir.glob('*.xlsx')))
+        files = glob.glob(os.path.join(self.targetDir, '*.xlsx'))
+        data_count_Target_xls = len(files)
         if data_count_Target_xls <= 0:
             return False
         return True
-    
+
     def extract_data(self, filename):
 
         sheetname = 0
@@ -80,12 +83,12 @@ class TargetController:
         columns= None
         df = pd.DataFrame()
         df = lib().extractToDF(df=df, filename=filename, sheetname=sheetname, atRows=atRows, columns=columns)
-        
-        
+
+
         for col in df.columns:
             if isinstance(col, datetime.datetime):
                 self.rename_columns[col] = str(col.month)
-        
+
         df = df.rename(columns= self.rename_columns)
         df = df.loc[:, ~df.columns.str.startswith("Unnamed")]
 
@@ -105,9 +108,9 @@ class TargetController:
         df = df.reset_index(drop=True)
 
         return df
-    
+
     def SetTargetDF(self):
-        list_Target_xls = list(self.targetDir.glob('*.xlsx'))
+        list_Target_xls = list(Path(self.targetDir).glob('*.xlsx'))
         total_files = len(list_Target_xls) + 1
         TargetDF = pd.DataFrame()
 
@@ -115,13 +118,13 @@ class TargetController:
             task_name = f"Processing {val}"
             SystemController().print_loading_bar(task_name, idx, total_files)
             df = self.extract_data(val)
-            
+
             sheetname = pd.ExcelFile(val).sheet_names[0]
             year = sheetname[-4:]
             df.insert(3, 'tahun', year)
-            
+
             TargetDF = pd.concat([TargetDF, df], axis=0)
         SystemController().print_loading_bar(task_name=f"Load Succesfull", current=total_files, total=total_files)
-        
+
         TargetDF = TargetDF.reset_index(drop=True)
         return TargetDF

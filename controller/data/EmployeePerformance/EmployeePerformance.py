@@ -2,12 +2,13 @@ import pathlib
 from openpyxl import load_workbook
 from urllib.parse import urlparse
 import subprocess
-
+import sys
+from pathlib import Path
 import pandas as pd
 from config import ConfigManager
 from controller.data.EmployeePerformance.EmployeePerformanceController import EmployeePerformanceController  as EPC
 from controller.data.metadata.ETarget import metadataTarget
-from controller.data.metadata.absence import metadataAbsence 
+from controller.data.metadata.absence import metadataAbsence
 from menuList.data.absence.summary import AbsenceSummaryMenu
 from menuList.data.Etarget.summary import TargetSummaryMenu
 from controller.data.ETarget.TargetController import TargetController
@@ -22,7 +23,7 @@ class EmployeePerformance:
 
         self.EPSummaryM = None
         self.EPSummaryMRaw = None
-        
+
         self.EPSummaryXM = None
         self.EPSummaryXMRaw = None
 
@@ -31,7 +32,7 @@ class EmployeePerformance:
         self.cliLinkMode = CM.config['cli-link-mode']
         self.XMonth = CM.config['data']["target-X-M"]
         return
-    
+
     def SetEPSummaryM(self, dataM):
         self.EPSummaryM = dataM
 
@@ -43,18 +44,18 @@ class EmployeePerformance:
         TDSummaryQ = self.TsummaryQ
 
         SummaryQ = pd.merge(
-            ASummaryQ, 
+            ASummaryQ,
             TDSummaryQ,
             on=['No.Absen', 'Nama', 'Bagian', 'tahun'],
             how='outer'
         )
-        SummaryQ = ( 
+        SummaryQ = (
             SummaryQ.groupby(['No.Absen'], as_index=False)
                 .agg(lambda x: x.ffill().bfill().iloc[0]) )
         SummaryQ = SummaryQ.infer_objects(copy=False)
         SummaryQ = SummaryQ.drop_duplicates(subset='No.Absen', keep='last').reset_index(drop=True)
         columnQ = [
-            'No.Absen', 'Nama', 'Bagian', 'tahun', 
+            'No.Absen', 'Nama', 'Bagian', 'tahun',
             'absen_avg_Q1', 'nilai_absen_Q1', 'Total_Absen_Q1', 'target_avg_Q1', 'nilai_Target_Q1',
             'absen_avg_Q2', 'nilai_absen_Q2', 'Total_Absen_Q2', 'target_avg_Q2', 'nilai_Target_Q2',
             'absen_avg_Q3', 'nilai_absen_Q3', 'Total_Absen_Q3', 'target_avg_Q3', 'nilai_Target_Q3',
@@ -62,7 +63,7 @@ class EmployeePerformance:
         ]
         SummaryQ = SummaryQ[columnQ]
         return SummaryQ
-        
+
     def checkSelfData(self):
         if self.EPSummaryM is None:
             AC = AbsenceSummaryMenu()
@@ -87,7 +88,7 @@ class EmployeePerformance:
             SummaryXMonth = EPC().ProcessSummaryXMonth(AbsenXData=AC.summaryXM, TargetXData=TD.summaryXM)
             self.SetEPSummaryM(dataM=SummaryMonth)
             self.SetEPSummaryXM(dataXM=SummaryXMonth)
-    
+
     def align_and_merge_metadata(self, scores_df, meta_df):
         max_len = max(len(scores_df), len(meta_df))
         scores_df = scores_df.reindex(range(max_len)).reset_index(drop=True)
@@ -100,11 +101,11 @@ class EmployeePerformance:
 
         SC.print_loading_bar(task_name="Checking Data",current=1, total=total_Process)
         self.checkSelfData()
-        
+
         # ASummaryS = self.AsummaryS
         # ASummaryA = self.AsummaryA
         # All_Absence = self.AsummaryM
-        
+
         # TDSummaryS = self.TsummaryS
         # TDSummaryA = self.TsummaryA
         # All_Target = self.Tsummary
@@ -118,9 +119,11 @@ class EmployeePerformance:
         TargetSummaryM = self.EPSummaryMRaw[3]
 
         # SummaryQ = self.ProcessSummaryQuarter()
-        
-        outputAName = "\\Employee_Absence_Performance_Summary.xlsx"
-        SummaryOutputPath = self.output_path+outputAName
+
+
+        outputAName = "Employee_Absence_Performance_Summary.xlsx"
+        SummaryOutputPath = Path(self.output_path) / outputAName
+
 
         absence_df, absence_meta = metadataAbsence().getMetaDataPD()
         target_df, target_meta= metadataTarget().getMetaDataPD()
@@ -140,18 +143,18 @@ class EmployeePerformance:
             TargetSummary.to_excel(writer, sheet_name="Target-Raw", index=True)
             TargetSummaryM.to_excel(writer, sheet_name="Target", index=True)
             metadata_df.to_excel(writer, sheet_name="metadata", index=True)
-            
+
             # SummaryQ.to_excel(writer, sheet_name="Quarter", index=True)
-            
+
         SC.print_loading_bar(task_name="1/4 Conditional Formatting",current=4, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Employee Performance", data=SummaryM, type="combine m")
 
         SC.print_loading_bar(task_name="1/4 Conditional Formatting",current=5, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname=f"EP last {self.XMonth} months", data=SummaryXM, type="combine xm")
-        
+
         SC.print_loading_bar(task_name="2/4 Conditional Formatting",current=6, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Absence", data=AbsenceSummaryM, type="Absence")
-        
+
         SC.print_loading_bar(task_name="3/4 Conditional Formatting",current=7, total=total_Process)
         EPC().formatExcelMonth(w=SummaryOutputPath, sheetname="Target", data=TargetSummaryM, type="Target")
 
@@ -161,25 +164,33 @@ class EmployeePerformance:
         SC.print_loading_bar(task_name="Formatting",current=9, total=total_Process)
 
         # self.formatExcelQuarter(w=SummaryOutputPath, data=SummaryQ)
-        
-        if self.cliLinkMode == "UNC":
-            folder_url = pathlib.Path(SummaryOutputPath).as_uri()
-            parsed = urlparse(folder_url)
-            path_fixed = parsed.path.replace('/', '\\')
-            unc_path = rf"\\{parsed.netloc}{path_fixed}"
-            print()
-            print(f"✅ Excel saved! File is ready to open! Open this folder in your file explorer:\n🔗 {unc_path}")
-            subprocess.run(['explorer', unc_path])
+
+        if sys.platform.startswith('win'):
+            if self.cliLinkMode == "UNC":
+                folder_url = pathlib.Path(SummaryOutputPath).as_uri()
+                parsed = urlparse(folder_url)
+                path_fixed = parsed.path.replace('/', '\\')
+                unc_path = rf"\\{parsed.netloc}{path_fixed}"
+                print()
+                print(f"✅ Excel saved! File is ready to open! Open this folder in your file explorer:\n🔗 {unc_path}")
+                subprocess.run(['explorer', unc_path])
+            else:
+                print(f"\n✅ Excel saved! File is ready to open! Open this folder in your file explorer:\n📁 {SummaryOutputPath}")
+                subprocess.run(['explorer', SummaryOutputPath])
         else:
+            # Linux / Mac
             print(f"\n✅ Excel saved! File is ready to open! Open this folder in your file explorer:\n📁 {SummaryOutputPath}")
-            subprocess.run(['explorer', SummaryOutputPath])
+            try:
+                subprocess.run(['xdg-open', SummaryOutputPath])
+            except Exception as e:
+                print("❌ Failed to open file manager automatically. Please open the folder manually.")
 
         return
-    
+
     def run(self):
-        
+
         TarController = TargetController()
-        
+
         hasFilesT = TarController.checkTargetFiles()
 
         if not hasFilesT:
@@ -188,8 +199,8 @@ class EmployeePerformance:
             print(self.targetDir)
             print()
             SystemController.wait_for_keypress()
-            return 
-        
+            return
+
         # AbsenceDF = AbsController.SetAbsenceDF()
         # outputAName = "\\absenceCleaned.xlsx"
         # AbsenceOutputPath = self.output_path+outputAName
@@ -199,5 +210,5 @@ class EmployeePerformance:
         # outputTName = "\\targetCleaned.xlsx"
         # TargetOutputPath = self.output_path+outputTName
         # TargetDF.to_excel(TargetOutputPath)
-   
+
         return

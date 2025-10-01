@@ -35,30 +35,30 @@ def checkDir():
     try:
         SC.print_loading_bar(task_name="Initializing",current=1, total=total_Process)
         current_path = os.getcwd()
-        
+
         config = CM.path
-        input_path = current_path+"\\DATASET\\INPUT"
-        output_path = current_path+"\\DATASET\\OUTPUT"
+        input_path = os.path.join(current_path, "DATASET", "INPUT")
+        output_path = os.path.join(current_path, "DATASET", "OUTPUT")
 
         SC.print_loading_bar(task_name="Checking Config",current=2, total=total_Process)
         if not os.path.exists(config):
             ConfigManager().initConfig()
-            
+
         # print(f"{config} ok")
-        
+
         SC.print_loading_bar(task_name="Checking Path",current=3, total=total_Process)
         if not os.path.exists(input_path) or os.path.exists(output_path):
-            absencePath = input_path+"\\ABSENCE"
-            targetPath = input_path+"\\TARGET"
-            
+            absencePath = os.path.join(input_path, "ABSENCE")
+            targetPath = os.path.join(input_path, "TARGET")
+
             os.makedirs(input_path, exist_ok=True)
             os.makedirs(absencePath, exist_ok=True)
             os.makedirs(targetPath, exist_ok=True)
 
             os.makedirs(output_path, exist_ok=True)
             # print()
-            # print("directories created")    
-        
+            # print("directories created")
+
         # print(f"{input_path} ok")
         # print(f"{output_path} ok")
         SC.print_loading_bar(task_name="Initiation",current=4, total=total_Process)
@@ -69,7 +69,7 @@ def checkDir():
     isSkip = CM.config['skip-init-loader']
     if not isSkip:
         SystemController.wait_for_keypress()
-    
+
     return
 
 def main():
@@ -77,7 +77,7 @@ def main():
 
     closeProgramMessage()
 
-    return 
+    return
 
 if __name__ == "__main__":
     SystemController.clear_screen()
@@ -88,4 +88,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nProcess interrupted by user. Exiting gracefully.")
         closeProgramMessage()
-        
