@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements.txt
@@ -81,18 +81,18 @@ jobs:
           path: dist/chibi-HR.exe
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: "3.10"
 
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements.txt
 
-      - name: Inject version info in app (optional)
+      - name: Inject version info in app
         run: |
           echo "__version__ = '${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_BUILD}'" > version.py
 
