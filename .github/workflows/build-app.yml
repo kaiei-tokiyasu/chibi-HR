@@ -105,7 +105,6 @@ jobs:
       - name: Build Linux executable
         if: matrix.os == 'ubuntu-latest'
         run: pyinstaller --onefile --name chibi-HR main.py
-        if: matrix.os == 'ubuntu-latest'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
@@ -114,35 +113,35 @@ jobs:
           path: dist/*
 
   release:
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
-        - name: Download Windows artifact
-          uses: actions/download-artifact@v3
-          with:
-            name: chibihr-windows-latest
-            path: dist/windows
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: chibihr-windows-latest
+          path: dist/windows
 
-        - name: Download Linux artifact
-          uses: actions/download-artifact@v3
-          with:
-            name: chibihr-ubuntu-latest
-            path: dist/linux
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: chibihr-ubuntu-latest
+          path: dist/linux
 
-        - name: List downloaded files
-          run: |
-            ls -la dist/windows
-            ls -la dist/linux
+      - name: List downloaded files
+        run: |
+          ls -la dist/windows
+          ls -la dist/linux
 
-        - name: Create GitHub Release
-          uses: softprops/action-gh-release@v2
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: ${{ github.ref_name }}
-            name: Release ${{ github.ref_name }}
-            files: |
-              dist/windows/chibi-HR.exe
-              dist/linux/chibi-HR
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: |
+            dist/windows/chibi-HR.exe
+            dist/linux/chibi-HR
