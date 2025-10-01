@@ -13,12 +13,12 @@ class EmployeePerformanceController:
     def __init__(self):
 
         self.status_fills = {
-            'S Perfect Record': PatternFill(start_color='A7C7E7', end_color='A7C7E7', fill_type='solid'), 
-            'Good Record': PatternFill(start_color='C6DBF0', end_color='C6DBF0', fill_type='solid'),    
-            'Needs Improvement': PatternFill(start_color='FFF2A6', end_color='FFF2A6', fill_type='solid'),  
-            'At Risk': PatternFill(start_color='FFCC99', end_color='FFCC99', fill_type='solid'),     
-            'Recommended for Dismissal': PatternFill(start_color='F4A6A6', end_color='F4A6A6', fill_type='solid'),  
-            'no data': PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),          
+            'S Perfect Record': PatternFill(start_color='A7C7E7', end_color='A7C7E7', fill_type='solid'),
+            'Good Record': PatternFill(start_color='C6DBF0', end_color='C6DBF0', fill_type='solid'),
+            'Needs Improvement': PatternFill(start_color='FFF2A6', end_color='FFF2A6', fill_type='solid'),
+            'At Risk': PatternFill(start_color='FFCC99', end_color='FFCC99', fill_type='solid'),
+            'Recommended for Dismissal': PatternFill(start_color='F4A6A6', end_color='F4A6A6', fill_type='solid'),
+            'no data': PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
         }
 
         self.trend_fills = {
@@ -27,19 +27,19 @@ class EmployeePerformanceController:
                 'stable':    PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
         }
         self.red_fill = PatternFill(start_color='FADBD8', end_color='FADBD8', fill_type='solid')
-        self.yellow_fill = PatternFill(start_color='FFF9CC', end_color='FFF9CC', fill_type='solid')  
+        self.yellow_fill = PatternFill(start_color='FFF9CC', end_color='FFF9CC', fill_type='solid')
 
         self.odd_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
         self.even_fill = PatternFill(start_color='F0F0F0', end_color='F0F0F0', fill_type='solid')
-        
+
         CM = ConfigManager()
         self.XMonth = CM.config['data']["absence-X-M"] | CM.config['data']["target-X-M"]
-        
+
         return
-    
+
     def ProcessSummaryMonth(AbsenData, TargetData):
         SummaryM = pd.merge(
-            AbsenData, 
+            AbsenData,
             TargetData,
             on=['No.Absen', 'Nama', 'Bagian', 'tahun'],
             how='outer'
@@ -53,12 +53,12 @@ class EmployeePerformanceController:
             Column_M.append(f'Total_Absen_B{i}')
             Column_M.append(f'Nilai_Absen_B{i}')
             Column_M.append(f'{i}')
-        
+
         Column_M =  [col for col in Column_M if col in SummaryM.columns]
         Column_M.append('Keterangan')
-        
+
         SummaryM = SummaryM[Column_M]
-        SummaryM = ( 
+        SummaryM = (
             SummaryM.groupby(['No.Absen'], as_index=False)
                   .agg(lambda x: x.ffill().bfill().iloc[0]) )
         SummaryM = SummaryM.infer_objects(copy=False)
@@ -92,9 +92,9 @@ class EmployeePerformanceController:
                 absence[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
                 absence[f'Nilai bulan {i}'] = row.get(f'Nilai_Absen_B{i}', '-')
 
-                target[f'Total Absen {i}'] = '-'
+                target[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
                 target[f'Nilai bulan {i}'] = row.get(str(i), '-')
-            
+
             absence['Keterangan'] = row.get('Keterangan', '')
             target['Keterangan'] = row.get('Keterangan', '')
             record.append(absence)
@@ -103,10 +103,10 @@ class EmployeePerformanceController:
         result = pd.DataFrame(record)
 
         return result
-    
+
     def ProcessSummaryXMonth(self, AbsenXData, TargetXData):
         SummaryXM = pd.merge(
-            AbsenXData, 
+            AbsenXData,
             TargetXData,
             on=['No.Absen', 'Nama', 'Bagian', 'tahun'],
             how='outer'
@@ -127,7 +127,7 @@ class EmployeePerformanceController:
         Column_XM.append('Keterangan')
         SummaryXM = SummaryXM[Column_XM]
 
-        SummaryXM = ( 
+        SummaryXM = (
             SummaryXM.groupby(['No.Absen'], as_index=False)
                   .agg(lambda x: x.ffill().bfill().iloc[0]) )
         SummaryXM = SummaryXM.infer_objects(copy=False)
@@ -142,7 +142,7 @@ class EmployeePerformanceController:
                 'tahun': row['tahun'],
                 'cabang': row['branch'],
                 '#': 'absence',
-                'Status terakhir': row['recent_status_A'],
+                'Status keseluruhan': row['overall_status_A'],
                 'Tren terakhir': row['recent_trend_A']
             }
             target = {
@@ -152,17 +152,17 @@ class EmployeePerformanceController:
                 'tahun': row['tahun'],
                 'cabang': row['branch'],
                 '#': 'target',
-                'Status terakhir': row['recent_status_T'],
+                'Status keseluruhan': row['overall_status_T'],
                 'Tren terakhir': row['recent_trend_T']
             }
-            
-            for m in last_x_months:
-                absence[f'Total Absen {m}'] = row.get(f'Total_Absen_B{m}', '-')
-                absence[f'Nilai bulan {m}'] = row.get(f'Nilai_Absen_B{m}', '-')
 
-                target[f'Total Absen {m}'] = '-'
-                target[f'Nilai bulan {m}'] = row.get(str(m), '-')
-            
+            for i in range(1, 13):
+                absence[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
+                absence[f'Nilai bulan {i}'] = row.get(f'Nilai_Absen_B{i}', '-')
+
+                target[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
+                target[f'Nilai bulan {i}'] = row.get(str(i), '-')
+
             absence['Keterangan'] = row.get('Keterangan', '')
             target['Keterangan'] = row.get('Keterangan', '')
             record.append(absence)
@@ -170,7 +170,7 @@ class EmployeePerformanceController:
 
         result = pd.DataFrame(record)
         return result
-    
+
     def setGradeColour(self, ws, Column_M, dataCols, start_row, end_row, colCondition):
         grade_columns = [col for col in Column_M if col.startswith(colCondition)]
         for col_name in grade_columns:
@@ -180,11 +180,11 @@ class EmployeePerformanceController:
 
             formula_e = f'${col_letter}{start_row}="E"'
             formula_d = f'${col_letter}{start_row}="D"'
-            
+
             ws.conditional_formatting.add(cell_range, FormulaRule(formula=[formula_e], fill=self.red_fill))
             ws.conditional_formatting.add(cell_range, FormulaRule(formula=[formula_d], fill=self.yellow_fill))
         return
-    
+
     def setOverallStatus(self, ws, dataCols, start_row, end_row):
         dataCols=dataCols.astype(str)
         normalized_cols = dataCols.str.replace("_", " ", regex=False)
@@ -193,8 +193,8 @@ class EmployeePerformanceController:
             loc =  next(
                 (dataCols[i] for i, col in enumerate(normalized_cols) if col.startswith("Status keseluruhan") or col.startswith("Status terakhir") or col.startswith("overall status")),
                 ""
-            )   
-            
+            )
+
             status_index = dataCols.get_loc(loc) + 2
             status_col = get_column_letter(status_index)
             status_range = f'{status_col}{start_row}:{status_col}{end_row}'
@@ -202,7 +202,7 @@ class EmployeePerformanceController:
             for status, fill in self.status_fills.items():
                 formula = f'${status_col}{start_row}="{status}"'
                 ws.conditional_formatting.add(status_range, FormulaRule(formula=[formula], fill=fill))
-        return 
+        return
 
     def setRecentTrend(self, ws, dataCols, start_row, end_row):
         dataCols=dataCols.astype(str)
@@ -222,8 +222,7 @@ class EmployeePerformanceController:
                 ws.conditional_formatting.add(trend_range, FormulaRule(formula=[formula], fill=fill))
 
         return
-    
-    
+
     def setAlternatingFill(self, ws):
         thin_border = Border(
             left=Side(style='none'),
@@ -236,14 +235,14 @@ class EmployeePerformanceController:
             for cell in row:
                 # Apply border
                 cell.border = thin_border
-                
+
                 # Fill even or odd row
                 if row_idx % 2 == 0:
                     cell.fill = self.even_fill
                 else:
                     cell.fill = self.odd_fill
         return
-    
+
     def formatMetaData(self, w):
         wb = load_workbook(w)
         ws = wb['metadata']
@@ -279,7 +278,7 @@ class EmployeePerformanceController:
             ws.column_dimensions[column].width = adjusted_width
         wb.save(w)
         return
-    
+
     def formatExcelMonth(self, w, sheetname, data, type):
         wb = load_workbook(w)
         ws = wb[sheetname]
@@ -314,7 +313,7 @@ class EmployeePerformanceController:
                 'Category, Grade', 'count', 'Metric', 'Value'
             ]
             colCondition = ''
-        
+
         dataCols = data.columns
         for i in range(1, 13):
             if type == 'combine m':
@@ -328,14 +327,14 @@ class EmployeePerformanceController:
                 Column_M.append(f'Nilai_Absen_B{i}')
             elif type == 'Target':
                 Column_M.append(f'{i}')
-            
+
         Column_M = [col for col in Column_M if col in dataCols]
 
         if type is not "metadata": Column_M.append('Keterangan')
 
         start_row = 2
         end_row = ws.max_row
-        
+
         self.setGradeColour(ws, Column_M, dataCols, start_row, end_row, colCondition)
         self.setOverallStatus(ws, dataCols, start_row, end_row)
         self.setRecentTrend(ws, dataCols, start_row, end_row)
@@ -348,7 +347,7 @@ class EmployeePerformanceController:
 
         # ws.add_table(table)
 
-        
+
 
         wb.save(w)
         return
