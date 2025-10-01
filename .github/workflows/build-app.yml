@@ -5,6 +5,11 @@ on:
     tags:
       - "v*" # Trigger on tags like v1.0.0, v1.2.3, etc.
 
+permissions:
+  contents: write
+  packages: write
+  id-token: read
+
 env:
   AUTHOR: "Adriel Chandra"
   COMPANY: "Kaiei Tokiyasu"
@@ -136,7 +141,7 @@ jobs:
           ls -la dist/linux
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
