@@ -142,7 +142,7 @@ class EmployeePerformanceController:
                 'tahun': row['tahun'],
                 'cabang': row['branch'],
                 '#': 'absence',
-                'Status keseluruhan': row['overall_status_A'],
+                'Status terakhir': row['recent_status_A'],
                 'Tren terakhir': row['recent_trend_A']
             }
             target = {
@@ -152,16 +152,15 @@ class EmployeePerformanceController:
                 'tahun': row['tahun'],
                 'cabang': row['branch'],
                 '#': 'target',
-                'Status keseluruhan': row['overall_status_T'],
+                'Status terakhir': row['recent_status_T'],
                 'Tren terakhir': row['recent_trend_T']
             }
 
-            for i in range(1, 13):
-                absence[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
-                absence[f'Nilai bulan {i}'] = row.get(f'Nilai_Absen_B{i}', '-')
-
-                target[f'Total Absen {i}'] = row.get(f'Total_Absen_B{i}', '-')
-                target[f'Nilai bulan {i}'] = row.get(str(i), '-')
+            for m in last_x_months:
+                absence[f'Total Absen {m}'] = row.get(f'Total_Absen_B{m}', '-')
+                absence[f'Nilai bulan {m}'] = row.get(f'Nilai_Absen_B{m}', '-')
+                target[f'Total Absen {m}'] = row.get(f'Total_Absen_B{m}', '-')
+                target[f'Nilai bulan {m}'] = row.get(str(m), '-')
 
             absence['Keterangan'] = row.get('Keterangan', '')
             target['Keterangan'] = row.get('Keterangan', '')
