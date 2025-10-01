@@ -20,15 +20,21 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
-    env:
-      # Extract version numbers from the tag like v1.2.3 or v1.2.3.4
-      VERSION_MAJOR: ${{ github.ref_name && github.ref_name.split('.')[0] | replace('v', '') }}
-      VERSION_MINOR: ${{ github.ref_name && github.ref_name.split('.')[1] }}
-      VERSION_PATCH: ${{ github.ref_name && github.ref_name.split('.')[2] }}
-      VERSION_BUILD: ${{ github.ref_name && github.ref_name.split('.')[3] || '0' }}
-
     steps:
       - uses: actions/checkout@v3
+
+      # Extract version parts from the tag and set env vars for the job
+      - name: Extract version from tag
+        id: extract_version
+        run: |
+          echo "Tag: $GITHUB_REF"
+          TAG=${GITHUB_REF##refs/tags/}
+          VERSION=${TAG#v}  # strip leading 'v'
+          IFS='.' read -r MAJOR MINOR PATCH BUILD <<< "$VERSION"
+          echo "VERSION_MAJOR=$MAJOR" >> $GITHUB_ENV
+          echo "VERSION_MINOR=$MINOR" >> $GITHUB_ENV
+          echo "VERSION_PATCH=$PATCH" >> $GITHUB_ENV
+          echo "VERSION_BUILD=${BUILD:-0}" >> $GITHUB_ENV
 
       - uses: actions/setup-python@v4
         with:
@@ -43,8 +49,8 @@ jobs:
           echo "Generating version.txt"
           echo "VSVersionInfo(" > version.txt
           echo "  ffi=FixedFileInfo(" >> version.txt
-          echo "    filevers=(${VERSION_MAJOR}, ${VERSION_MINOR}, ${VERSION_PATCH}, ${VERSION_BUILD})," >> version.txt
-          echo "    prodvers=(${VERSION_MAJOR}, ${VERSION_MINOR}, ${VERSION_PATCH}, ${VERSION_BUILD})," >> version.txt
+          echo "    filevers=(${{ env.VERSION_MAJOR }}, ${{ env.VERSION_MINOR }}, ${{ env.VERSION_PATCH }}, ${{ env.VERSION_BUILD }})," >> version.txt
+          echo "    prodvers=(${{ env.VERSION_MAJOR }}, ${{ env.VERSION_MINOR }}, ${{ env.VERSION_PATCH }}, ${{ env.VERSION_BUILD }})," >> version.txt
           echo "    mask=0x3f," >> version.txt
           echo "    flags=0x0," >> version.txt
           echo "    OS=0x4," >> version.txt
@@ -55,15 +61,15 @@ jobs:
           echo "  kids=[" >> version.txt
           echo "    StringFileInfo([" >> version.txt
           echo "      StringTable('040904B0', [" >> version.txt
-          echo "        StringStruct('CompanyName', '${COMPANY}')," >> version.txt
-          echo "        StringStruct('FileDescription', '${DESCRIPTION}')," >> version.txt
-          echo "        StringStruct('FileVersion', '${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_BUILD}')," >> version.txt
-          echo "        StringStruct('InternalName', '${INTERNAL_NAME}')," >> version.txt
-          echo "        StringStruct('LegalCopyright', '${COMPANY}')," >> version.txt
-          echo "        StringStruct('OriginalFilename', '${ORIGINAL_FILENAME}.exe')," >> version.txt
-          echo "        StringStruct('ProductName', '${PRODUCT_NAME}')," >> version.txt
-          echo "        StringStruct('ProductVersion', '${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_BUILD}')," >> version.txt
-          echo "        StringStruct('Comments', 'Author: ${AUTHOR}')" >> version.txt
+          echo "        StringStruct('CompanyName', '${{ env.COMPANY }}')," >> version.txt
+          echo "        StringStruct('FileDescription', '${{ env.DESCRIPTION }}')," >> version.txt
+          echo "        StringStruct('FileVersion', '${{ env.VERSION_MAJOR }}.${{ env.VERSION_MINOR }}.${{ env.VERSION_PATCH }}.${{ env.VERSION_BUILD }}')," >> version.txt
+          echo "        StringStruct('InternalName', '${{ env.INTERNAL_NAME }}')," >> version.txt
+          echo "        StringStruct('LegalCopyright', '${{ env.COMPANY }}')," >> version.txt
+          echo "        StringStruct('OriginalFilename', '${{ env.ORIGINAL_FILENAME }}.exe')," >> version.txt
+          echo "        StringStruct('ProductName', '${{ env.PRODUCT_NAME }}')," >> version.txt
+          echo "        StringStruct('ProductVersion', '${{ env.VERSION_MAJOR }}.${{ env.VERSION_MINOR }}.${{ env.VERSION_PATCH }}.${{ env.VERSION_BUILD }}')," >> version.txt
+          echo "        StringStruct('Comments', 'Author: ${{ env.AUTHOR }}')" >> version.txt
           echo "      ])" >> version.txt
           echo "    ])" >> version.txt
           echo "  ]," >> version.txt
@@ -76,7 +82,7 @@ jobs:
 
       - name: Inject version info for Linux
         if: matrix.os == 'ubuntu-latest'
-        run: echo "__version__ = '${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_BUILD}'" > version.py
+        run: echo "__version__ = '${{ env.VERSION_MAJOR }}.${{ env.VERSION_MINOR }}.${{ env.VERSION_PATCH }}.${{ env.VERSION_BUILD }}'" > version.py
 
       - name: Build Linux executable
         if: matrix.os == 'ubuntu-latest'
