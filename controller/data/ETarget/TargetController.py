@@ -1,8 +1,6 @@
-from csv import excel
 import pathlib
 from pathlib import Path
-from numpy import dtype
-
+from config import ConfigManager
 import datetime
 import os
 import glob
@@ -67,6 +65,11 @@ class TargetController:
         ]
         self.dfFillOther = "#"
 
+        CM = ConfigManager()
+        self.columnId= "No.Absen"
+        self.excludeId = CM.config['row-exclude']["employee-data-id"]
+
+
         return
 
     def checkTargetFiles(self):
@@ -108,7 +111,13 @@ class TargetController:
         df = df.reset_index(drop=True)
 
         return df
+    def excludeRowById(self, raw_data):
+        col_id = self.columnId
+        ids_to_remove = self.excludeId
 
+        result = raw_data[~raw_data[col_id].isin(ids_to_remove)]
+
+        return result
     def SetTargetDF(self):
         list_Target_xls = list(Path(self.targetDir).glob('*.xlsx'))
         total_files = len(list_Target_xls) + 1
@@ -126,5 +135,6 @@ class TargetController:
             TargetDF = pd.concat([TargetDF, df], axis=0)
         SystemController().print_loading_bar(task_name=f"Load Succesfull", current=total_files, total=total_files)
 
+        TargetDF = self.excludeRowById(TargetDF)
         TargetDF = TargetDF.reset_index(drop=True)
         return TargetDF

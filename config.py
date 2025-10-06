@@ -44,40 +44,49 @@ class ConfigManager:
             "settings":{
                 "default_page_size": 30
             },
+            "row-exclude":{
+                "employee-data-id": ["BCAS027"]
+            },
+            "row-msg":{
+                "perfect-msg":"rekor sempurna",
+                "good-msg":"rekor bagus",
+                "improve-msg": "perlu ditingkatkan",
+                "risk-msg":"risiko dipecat",
+                "dismiss-msg":"pertimbangan  kandidat",
+                "no-data": "tidak ada data",
+
+                "trend-improve-msg":"membaik",
+                "trend-decline-msg":"menurun",
+                "trend-stable-msg":"stabil"
+            },
+            "row-id-metadata":{
+                "AR":"supir",
+                "BCA":"yayasan BCA",
+                "M":"yayasan Mandiri",
+                "BL":"pekerja lama",
+                "BLM":"pekerja lama Mandiri",
+                "PK":"security",
+                "SCY":"security",
+                "SMTI":"pekerja magang"
+            },
             "data":{
+                #absence-show-last-x-month
+                "absence-X-M": 4,
+
+                #absence-status-x-months
                 "absence-perfect-con-M": "A",
                 "absence-dismiss-threshold-M": {"E": 2},
                 "absence-risk-threshold-M": {"E": 1, "D": 2},
                 "absence-warn-threshold-M": {"D": 1, "C": 2},
-                "absence-recent-trend-M": 3,
-                "absence-X-M": 4,
 
+                "absence-recent-trend-M": 3,
+                #absence-status-annual
                 "absence-perfect-con-A": "A",
                 "absence-dismiss-threshold-A": {"E": 2},
                 "absence-risk-threshold-A": {"E": 1, "D": 2},
                 "absence-warn-threshold-A": {"D": 1, "C": 2},
 
-                # "absence-passing-grade-M": "C",
-                # "absence-passing-grade-Q": "D",
-                # "absence-passing-grade-S": "D",
-                # "absence-passing-grade-A": "D",
-
-                "target-perfect-con-M": "A",
-                "target-dismiss-threshold-M": {"E": 2},
-                "target-risk-threshold-M": {"E": 1, "D": 2},
-                "target-warn-threshold-M": {"D": 1, "C": 2},
-                "target-recent-trend-M": 3,
-                "target-X-M": 4,
-
-                "target-perfect-con-A": "A",
-                "target-dismiss-threshold-A": {"E": 2},
-                "target-risk-threshold-A": {"E": 1, "D": 2},
-                "target-warn-threshold-A": {"D": 1, "C": 2},
-                # "target-passing-grade-M": "C",
-                # "target-passing-grade-Q": "D",
-                # "target-passing-grade-S": "D",
-                # "target-passing-grade-A": "D",
-
+                # absence-grade-month
                 "absence-M":{
                     "A": 0,
                     "B": 2,
@@ -85,6 +94,7 @@ class ConfigManager:
                     "D": 4,
                     "E": 30
                 },
+                # absence-grade-quarter
                 "absence-Q":{
                     "A": 0,
                     "B": 6,
@@ -92,6 +102,7 @@ class ConfigManager:
                     "D": 16,
                     "E": 90
                 },
+                # absence-grade-semester
                 "absence-Semester":{
                     "A": 0,
                     "B": 12,
@@ -99,6 +110,21 @@ class ConfigManager:
                     "D": 24,
                     "E": 183
                 },
+
+                # target-month
+                "target-perfect-con-M": "A",
+                "target-dismiss-threshold-M": {"E": 2},
+                "target-risk-threshold-M": {"E": 1, "D": 2},
+                "target-warn-threshold-M": {"D": 1, "C": 2},
+                "target-recent-trend-M": 3,
+                "target-X-M": 4,
+
+                #target-annual
+                "target-perfect-con-A": "A",
+                "target-dismiss-threshold-A": {"E": 2},
+                "target-risk-threshold-A": {"E": 1, "D": 2},
+                "target-warn-threshold-A": {"D": 1, "C": 2},
+
                 "absence-Annual": {
                     "A": 2,
                     "B": 24,
@@ -138,7 +164,6 @@ class ConfigManager:
                     "E": 1,
                     "F" : 0
                 }
-
             }
         }
         return configs
@@ -153,7 +178,19 @@ class ConfigManager:
         for key, val in self.config.get("settings", {}).items():
             print(f"  - {key}: {val}")
 
-        print("\n data:")
+        print("\n Row exclude:")
+        for key, val in self.config.get("row-exclude", {}).items():
+            print(f"  - {key}: {val}")
+
+        print("\n Row message:")
+        for key, val in self.config.get("row-msg", {}).items():
+            print(f"  - {key}: {val}")
+
+        print("\n Row id metadata:")
+        for key, val in self.config.get("row-id-metadata", {}).items():
+            print(f"  - {key}: {val}")
+
+        print("\n Data:")
         for key, val in self.config.get("data", {}).items():
             print(f"  - {key}: {val}")
 

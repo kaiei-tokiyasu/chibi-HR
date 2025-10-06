@@ -1,6 +1,6 @@
 import pathlib
 from pathlib import Path
-from numpy import dtype, extract
+from config import ConfigManager
 import os
 import glob
 import pandas as pd
@@ -59,7 +59,6 @@ class AbsenceController:
 
         self.cleanByColumnName = "Nama"
 
-
         self.paths = pathController().paths
         self.input_path = self.paths['input_path']
         self.output_path = self.paths['output_path']
@@ -67,6 +66,11 @@ class AbsenceController:
         self.input_data_dir =  pathlib.Path(self.input_path)
 
         self.absenceDir = os.path.join(self.input_path, "ABSENCE")
+
+        CM = ConfigManager()
+        self.columnId= "No.Absen"
+        self.excludeId = CM.config['row-exclude']["employee-data-id"]
+
         return
 
     def checkAbsenceFiles(self):
@@ -126,6 +130,16 @@ class AbsenceController:
 
         result = raw_data[raw_data[targetCol].isin(result)]
         return result
+
+    def excludeRowById(self, raw_data):
+        col_id = self.columnId
+        ids_to_remove = self.excludeId
+
+        result = raw_data[~raw_data[col_id].isin(ids_to_remove)]
+
+        return result
+
+
     def SetAbsenceDF(self):
         list_Absence_xls = list(Path(self.absenceDir).glob('*.xlsx'))
         total_files = len(list_Absence_xls) + 1
@@ -156,6 +170,8 @@ class AbsenceController:
         AbsenceDF = AbsenceDF.sort_values(self.sortValuesBy).reset_index(drop=True)
 
         AbsenceDF = self.cleanOldNames(AbsenceDF)
+
+        AbsenceDF = self.excludeRowById(AbsenceDF)
 
         # print(AbsenceDF)
         return AbsenceDF

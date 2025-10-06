@@ -2,18 +2,18 @@ from config import ConfigManager
 
 class AbsenceStatus:
     def __init__(self):
-        self.perfect_msg = "S Perfect Record"
-        self.good_msg = "Good Record"
-        self.improve_msg = "Needs Improvement"
-        self.risk_msg = "At Risk"
-        self.dismiss_msg = "Recommended for Dismissal"
-        self.no_data_msg =  "no data"
-
-        self.tr_improve_msg = "improving"
-        self.tr_decline_msg = "declining"
-        self.tr_stable_msg = "stable"
-
         CM = ConfigManager()
+        self.perfect_msg = CM.config['row-msg']['perfect-msg']
+        self.good_msg = CM.config['row-msg']['good-msg']
+        self.improve_msg = CM.config['row-msg']['improve-msg']
+        self.risk_msg = CM.config['row-msg']['risk-msg']
+        self.dismiss_msg = CM.config['row-msg']['dismiss-msg']
+        self.no_data_msg =  CM.config['row-msg']['no-data']
+
+        self.tr_improve_msg = CM.config['row-msg']['trend-improve-msg']
+        self.tr_decline_msg = CM.config['row-msg']['trend-decline-msg']
+        self.tr_stable_msg = CM.config['row-msg']['trend-stable-msg']
+
         self.absence_grade_M = CM.config['data']['absence-M']
         self.recentWin = CM.config['data']["absence-recent-trend-M"]
 

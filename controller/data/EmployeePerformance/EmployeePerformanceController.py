@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Self
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -12,32 +11,48 @@ from config import ConfigManager
 class EmployeePerformanceController:
     def __init__(self):
 
+
+
+        CM = ConfigManager()
+        self.XMonth = CM.config['data']["absence-X-M"] | CM.config['data']["target-X-M"]
+
+        self.perfect_msg = CM.config['row-msg']['perfect-msg']
+        self.good_msg = CM.config['row-msg']['good-msg']
+        self.improve_msg = CM.config['row-msg']['improve-msg']
+        self.risk_msg = CM.config['row-msg']['risk-msg']
+        self.dismiss_msg = CM.config['row-msg']['dismiss-msg']
+        self.no_data_msg =  CM.config['row-msg']['no-data']
+
+        self.tr_improve_msg = CM.config['row-msg']['trend-improve-msg']
+        self.tr_decline_msg = CM.config['row-msg']['trend-decline-msg']
+        self.tr_stable_msg = CM.config['row-msg']['trend-stable-msg']
+
+
+
+        #conditinal formatting
         self.status_fills = {
-            'S Perfect Record': PatternFill(start_color='A7C7E7', end_color='A7C7E7', fill_type='solid'),
-            'Good Record': PatternFill(start_color='C6DBF0', end_color='C6DBF0', fill_type='solid'),
-            'Needs Improvement': PatternFill(start_color='FFF2A6', end_color='FFF2A6', fill_type='solid'),
-            'At Risk': PatternFill(start_color='FFCC99', end_color='FFCC99', fill_type='solid'),
-            'Recommended for Dismissal': PatternFill(start_color='F4A6A6', end_color='F4A6A6', fill_type='solid'),
-            'no data': PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
+            self.perfect_msg : PatternFill(start_color='A7C7E7', end_color='A7C7E7', fill_type='solid'),
+            self.good_msg: PatternFill(start_color='C6DBF0', end_color='C6DBF0', fill_type='solid'),
+            self.improve_msg : PatternFill(start_color='FFF2A6', end_color='FFF2A6', fill_type='solid'),
+            self.risk_msg : PatternFill(start_color='FFCC99', end_color='FFCC99', fill_type='solid'),
+            self.dismiss_msg : PatternFill(start_color='F4A6A6', end_color='F4A6A6', fill_type='solid'),
+            self.no_data_msg : PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
         }
 
         self.trend_fills = {
-                'improving': PatternFill(start_color='A8E6CF', end_color='A8E6CF', fill_type='solid'),
-                'declining': PatternFill(start_color='F7A1C4', end_color='F7A1C4', fill_type='solid'),
-                'stable':    PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
+            self.tr_improve_msg: PatternFill(start_color='A8E6CF', end_color='A8E6CF', fill_type='solid'),
+            self.tr_decline_msg : PatternFill(start_color='F7A1C4', end_color='F7A1C4', fill_type='solid'),
+            self.tr_stable_msg:    PatternFill(start_color='D9D9D9', end_color='D9D9D9', fill_type='solid'),
         }
+
         self.red_fill = PatternFill(start_color='FADBD8', end_color='FADBD8', fill_type='solid')
         self.yellow_fill = PatternFill(start_color='FFF9CC', end_color='FFF9CC', fill_type='solid')
 
         self.odd_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
         self.even_fill = PatternFill(start_color='F0F0F0', end_color='F0F0F0', fill_type='solid')
-
-        CM = ConfigManager()
-        self.XMonth = CM.config['data']["absence-X-M"] | CM.config['data']["target-X-M"]
-
         return
 
-    def ProcessSummaryMonth(AbsenData, TargetData):
+    def ProcessSummaryMonth(self, AbsenData, TargetData):
         SummaryM = pd.merge(
             AbsenData,
             TargetData,
@@ -145,6 +160,7 @@ class EmployeePerformanceController:
                 'Status terakhir': row['recent_status_A'],
                 'Tren terakhir': row['recent_trend_A']
             }
+
             target = {
                 'No.Absen': row['No.Absen'],
                 'Nama': row['Nama'],

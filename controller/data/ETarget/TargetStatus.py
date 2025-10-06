@@ -2,18 +2,18 @@ from config import ConfigManager
 
 class TargetStatus:
     def __init__(self):
-        self.perfect_msg = "S Perfect Record"
-        self.good_msg = "Good Record"
-        self.improve_msg = "Needs Improvement"
-        self.risk_msg = "At Risk"
-        self.dismiss_msg = "Recommended for Dismissal"
-        self.no_data_msg =  "no data"
-
-        self.tr_improve_msg = "improving"
-        self.tr_decline_msg = "declining"
-        self.tr_stable_msg = "stable"
-
         CM = ConfigManager()
+        self.perfect_msg = CM.config['row-msg']['perfect-msg']
+        self.good_msg = CM.config['row-msg']['good-msg']
+        self.improve_msg = CM.config['row-msg']['improve-msg']
+        self.risk_msg = CM.config['row-msg']['risk-msg']
+        self.dismiss_msg = CM.config['row-msg']['dismiss-msg']
+        self.no_data_msg =  CM.config['row-msg']['no-data']
+
+        self.tr_improve_msg = CM.config['row-msg']['trend-improve-msg']
+        self.tr_decline_msg = CM.config['row-msg']['trend-decline-msg']
+        self.tr_stable_msg = CM.config['row-msg']['trend-stable-msg']
+
         self.absence_grade_M = CM.config['data']['absence-M']
         self.recentWin = CM.config['data']["target-recent-trend-M"]
         return
@@ -26,7 +26,7 @@ class TargetStatus:
         perfectCon = conditionType['perfectCon']
 
         if not valid_grades:
-            status = "no data"
+            status = self.no_data_msg
         elif valid_grades and all(g ==  perfectCon for g in valid_grades):
             status = self.perfect_msg
         elif any(grade_counts.get(k, 0) >= v for k, v in conditionType['dismissCon'].items()):
@@ -47,13 +47,13 @@ class TargetStatus:
         recent_grades = [grade_scale[g.upper()] for g in valid_grades[-self.recentWin:]]
 
         if len(recent_grades) < self.recentWin:
-            recent_trend = "stable"  # Not enough data
+            recent_trend = self.tr_stable_msg
         elif recent_grades[-2] < recent_grades[-1]:
-            recent_trend = "improving"
+            recent_trend = self.tr_improve_msg
         elif recent_grades[-2] > recent_grades[-1]:
-            recent_trend = "declining"
+            recent_trend = self.tr_decline_msg
         else:
-            recent_trend = "stable"
+            recent_trend = self.tr_stable_msg
 
         return {
             "overall_status_T": overall_status,
