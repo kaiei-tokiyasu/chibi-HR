@@ -1,5 +1,4 @@
 import pathlib
-from openpyxl import load_workbook
 from urllib.parse import urlparse
 import subprocess
 import sys
@@ -9,6 +8,7 @@ from config import ConfigManager
 from controller.data.EmployeePerformance.EmployeePerformanceController import EmployeePerformanceController  as EPC
 from controller.data.metadata.ETarget import metadataTarget
 from controller.data.metadata.absence import metadataAbsence
+from controller.data.metadata.employeeId import metadataEmployeeId
 from menuList.data.absence.summary import AbsenceSummaryMenu
 from menuList.data.Etarget.summary import TargetSummaryMenu
 from controller.data.ETarget.TargetController import TargetController
@@ -84,7 +84,7 @@ class EmployeePerformance:
                 TD.summaryXM,
             ]
 
-            SummaryMonth = EPC.ProcessSummaryMonth(AC.summaryM, TD.summaryM)
+            SummaryMonth = EPC().ProcessSummaryMonth(AbsenData=AC.summaryM, TargetData=TD.summaryM)
             SummaryXMonth = EPC().ProcessSummaryXMonth(AbsenXData=AC.summaryXM, TargetXData=TD.summaryXM)
             self.SetEPSummaryM(dataM=SummaryMonth)
             self.SetEPSummaryXM(dataXM=SummaryXMonth)
@@ -127,11 +127,13 @@ class EmployeePerformance:
 
         absence_df, absence_meta = metadataAbsence().getMetaDataPD()
         target_df, target_meta= metadataTarget().getMetaDataPD()
+        employee_id_df = metadataEmployeeId().getMetaDataPD()
 
         absence_combined = self.align_and_merge_metadata(scores_df=absence_df, meta_df=absence_meta)
         target_combined = self.align_and_merge_metadata(scores_df=target_df, meta_df=target_meta)
-        metadata_df = pd.concat([absence_combined, target_combined], ignore_index=True)
 
+
+        metadata_df = pd.concat([absence_combined, target_combined, employee_id_df], ignore_index=True)
 
         SC.print_loading_bar(task_name="Exporting",current=2, total=total_Process)
 
